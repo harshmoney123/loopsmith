@@ -5,7 +5,7 @@
 **Public GitHub Repository:** https://github.com/harshmoney123/loopsmith
 **Live Demo URL:** https://loopsmith-sepia.vercel.app
 **Demo Video:** (paste YouTube link after recording — see DEMO.md)
-**Session Log:** run `/export session-log.md` in Claude Code, commit it, link the repo file.
+**Session Log:** https://github.com/harshmoney123/loopsmith/tree/main/session-logs
 
 ---
 
