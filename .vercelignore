@@ -1,0 +1,7 @@
+# Never ship runtime data / secrets to the deployment bundle.
+.loopsmith-data
+.env.local
+shot-*.png
+.playwright-mcp
+RESEARCH.md
+UI-RESEARCH.md
