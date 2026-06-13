@@ -29,7 +29,7 @@ export interface ConnectorMeta {
   /** Token-paste fields (for method "token"). */
   fields?: { key: string; label: string; placeholder: string; required?: boolean }[];
   /** OAuth provider id (for method "oauth"). */
-  oauth?: "google" | "slack";
+  oauth?: "google" | "slack" | "notion";
   blurb: string;
 }
 
@@ -37,7 +37,7 @@ export const CONNECTOR_META: ConnectorMeta[] = [
   { source: "slack", label: "Slack", method: "oauth", oauth: "slack", blurb: "Read recent channel messages.", fields: [{ key: "SLACK_BOT_TOKEN", label: "Bot token", placeholder: "xoxb-…" }] },
   { source: "gmail", label: "Gmail", method: "oauth", oauth: "google", blurb: "Read recent inbox + draft replies." },
   { source: "calendar", label: "Calendar", method: "oauth", oauth: "google", blurb: "Upcoming events." },
-  { source: "notion", label: "Notion", method: "token", blurb: "Read recent pages + create tasks.", fields: [
+  { source: "notion", label: "Notion", method: "oauth", oauth: "notion", blurb: "Read recent pages + create real tasks.", fields: [
     { key: "NOTION_TOKEN", label: "Integration token", placeholder: "ntn_… / secret_…", required: true },
     { key: "NOTION_TASKS_DB", label: "Tasks database ID (optional, enables task creation)", placeholder: "32-char id" },
   ] },

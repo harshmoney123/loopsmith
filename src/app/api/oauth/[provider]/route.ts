@@ -36,6 +36,20 @@ export async function GET(req: Request, ctx: { params: Promise<{ provider: strin
     return NextResponse.redirect(url);
   }
 
+  if (provider === "notion") {
+    const clientId = env("NOTION_OAUTH_CLIENT_ID");
+    if (!clientId) return bad("Notion OAuth not configured (NOTION_OAUTH_CLIENT_ID missing) — use token paste instead");
+    const url =
+      "https://api.notion.com/v1/oauth/authorize?" +
+      new URLSearchParams({
+        client_id: clientId,
+        response_type: "code",
+        owner: "user",
+        redirect_uri: redirectUri,
+      }).toString();
+    return NextResponse.redirect(url);
+  }
+
   if (provider === "slack") {
     const clientId = env("SLACK_CLIENT_ID");
     if (!clientId) return bad("Slack OAuth not configured (SLACK_CLIENT_ID missing) — use token paste instead");
