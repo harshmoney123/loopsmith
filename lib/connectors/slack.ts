@@ -20,7 +20,7 @@ function clean(t: string): string {
   return t
     .replace(/<@[A-Z0-9]+>/g, "@someone")
     .replace(/<#[A-Z0-9]+\|([^>]+)>/g, "#$1")
-    .replace(/<[^|>]+\|([^>]+)>/g, "$2") // <url|label>, <mailto:x|label> → label
+    .replace(/<[^|>]+\|([^>]+)>/g, "$1") // <url|label>, <mailto:x|label> → label
     .replace(/<((?:https?|mailto|tel):[^>]+)>/g, "$1") // bare <url> → url
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
