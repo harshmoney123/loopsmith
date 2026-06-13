@@ -257,7 +257,7 @@ export default function BuildPage() {
 
   /* -------------------------------- run loop -------------------------------- */
 
-  const runLoop = useCallback(async () => {
+  const runLoop = useCallback(async (rawContext?: string) => {
     if (!spec) return;
     setPhase("run");
     setError(null);
@@ -268,7 +268,7 @@ export default function BuildPage() {
       const res = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ spec, priorLearnings: memory }),
+        body: JSON.stringify({ spec, priorLearnings: memory, rawContext: rawContext || "" }),
       });
       if (!res.body) throw new Error("no response stream");
       const reader = res.body.getReader();
@@ -390,7 +390,7 @@ export default function BuildPage() {
 
           {/* spec confirmation */}
           {phase !== "intro" && phase !== "interview" && spec && (
-            <SpecCard spec={spec} onRun={runLoop} onDownload={downloadSpec} running={running} ran={phase === "run"} />
+            <SpecCard spec={spec} onRun={() => runLoop()} onRunReal={(raw) => runLoop(raw)} onDownload={downloadSpec} running={running} ran={phase === "run"} />
           )}
 
           {/* inline run console */}
@@ -552,16 +552,20 @@ function Thinking() {
 function SpecCard({
   spec,
   onRun,
+  onRunReal,
   onDownload,
   running,
   ran,
 }: {
   spec: LoopSpec;
   onRun: () => void;
+  onRunReal: (raw: string) => void;
   onDownload: () => void;
   running: boolean;
   ran: boolean;
 }) {
+  const [paste, setPaste] = useState(false);
+  const [raw, setRaw] = useState("");
   const sensors = spec.sensors.join(" · ") || "your tools";
   const cadence = spec.cadence.startsWith("weekly")
     ? "every week"
@@ -605,14 +609,47 @@ function SpecCard({
       </div>
 
       {!ran && (
-        <div className="mt-5 flex items-center gap-3">
-          <button onClick={onRun} disabled={running} className="btn btn-primary px-4 py-2">
-            <Icon k="spark" className="h-4 w-4" />
-            Build &amp; run loop
-          </button>
-          <button onClick={onDownload} className="btn btn-outline px-3 py-2">
-            Download spec
-          </button>
+        <div className="mt-5 flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <button onClick={onRun} disabled={running} className="btn btn-primary px-4 py-2">
+              <Icon k="spark" className="h-4 w-4" />
+              Run on a sample week
+            </button>
+            <button onClick={() => setPaste((v) => !v)} disabled={running} className="btn btn-outline px-3 py-2">
+              {paste ? "Hide" : "Run on my real data"}
+            </button>
+            <button onClick={onDownload} className="btn btn-ghost px-3 py-2">
+              Download spec
+            </button>
+          </div>
+
+          {paste && (
+            <div className="rise rounded-xl border border-[var(--border)] bg-[var(--bg-tint)] p-3">
+              <p className="mb-2 text-[12.5px] text-[var(--muted)]">
+                Paste your actual week — Slack snippets, emails, call notes, calendar items. The loop
+                runs on <strong>your</strong> data and grounds every move in it. Nothing is sent;
+                actions are drafted for your review.
+              </p>
+              <textarea
+                value={raw}
+                onChange={(e) => setRaw(e.target.value)}
+                rows={6}
+                placeholder={"[slack] Jordan: can we get Q3 numbers before the board call?\nEmail from jane@acme.com: ready to sign once SSO is confirmed.\nCall with BetaCo — churned, cited onboarding.\nCalendar: demo with Initech Thursday 2pm."}
+                className="w-full resize-y rounded-lg border border-[var(--border)] bg-[var(--panel)] p-3 text-[13px] leading-relaxed text-[var(--fg)] outline-none placeholder:text-[var(--faint)]"
+              />
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-[11px] text-[var(--faint)]">One item per line or per paragraph. Markers like “[slack]”, “Email from…”, “Call with…” are auto-detected.</span>
+                <button
+                  onClick={() => onRunReal(raw)}
+                  disabled={running || raw.trim().length < 3}
+                  className="btn btn-primary px-4 py-2"
+                >
+                  <Icon k="spark" className="h-4 w-4" />
+                  Run on my data
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
