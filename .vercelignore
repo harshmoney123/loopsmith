@@ -5,3 +5,5 @@ shot-*.png
 .playwright-mcp
 RESEARCH.md
 UI-RESEARCH.md
+session-log.md
+session-logs
