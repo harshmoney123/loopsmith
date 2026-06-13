@@ -45,6 +45,7 @@ shot-*.png
 .playwright-mcp/
 
 # loopsmith runtime data (written at runtime by the engine + scheduler)
+/.loopsmith-data/
 /runs/*
 !/runs/.gitkeep
 /memory/*

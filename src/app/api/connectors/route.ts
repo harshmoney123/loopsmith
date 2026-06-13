@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
-import { connectorStatus } from "@/lib/connectors";
+import { connectorStatus, CONNECTOR_META } from "@/lib/connectors";
 
 export const runtime = "nodejs";
 
 /**
- * /api/connectors — which real connectors are live vs need credentials.
- * Lets the UI show a connection panel (like AgentWeb's "connected accounts")
- * and proves the sensor/tools layer is real, not mocked.
+ * /api/connectors — which real connectors are live vs need credentials, plus
+ * how each is connected (oauth/token) so the /connect UI can render itself.
  */
 export async function GET() {
-  const connectors = connectorStatus();
+  const status = await connectorStatus();
+  const bySource = Object.fromEntries(status.map((s) => [s.source, s]));
+  const connectors = CONNECTOR_META.map((m) => ({
+    ...m,
+    configured: bySource[m.source]?.configured ?? false,
+    note: bySource[m.source]?.note ?? "",
+  }));
   return NextResponse.json({
     connectors,
     liveCount: connectors.filter((c) => c.configured).length,

@@ -1,7 +1,7 @@
 import type { LoopSpec, Learning, RunRecord } from "@/lib/types";
 import { streamText } from "@/lib/anthropic";
 import { ingest } from "./sensor";
-import { policyPrompt } from "./policy";
+import { policyPrompt, parsePlan } from "./policy";
 import { parseActions, act } from "./tools";
 import { gatePrompt, parseGate } from "./gate";
 import { learningPrompt, parseLearnings } from "./learning";
@@ -38,7 +38,7 @@ export async function runOnce(
   return {
     ts,
     signals,
-    plan: { focus: "", reasoning: output, moves: [] },
+    plan: parsePlan(output),
     outcomes,
     output,
     gate,

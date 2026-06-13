@@ -1,10 +1,12 @@
 import type { ToolOutcome } from "@/lib/types";
+import { dispatchAction } from "@/lib/connectors";
 
 /**
  * TOOLS LAYER (5/5)
- * Executes the plan's actions. Defaults to dry-run (drafts, not sends) for demo
- * safety — a visible toggle would flip to real MCP write calls (gmail.draft,
- * slack.send, notion.create, …).
+ * Executes the plan's actions. Dry-run by default (drafts, not sends); when a
+ * run is `live` and the target connector is configured, the action really
+ * happens — e.g. notion.create makes a real Notion task, gmail.draft a real
+ * draft. See lib/connectors.
  */
 
 /** Pull the "## Actions" lines ("- [tool] description") out of the brief. */
@@ -30,4 +32,16 @@ export function act(
     ok: true,
     result: dryRun ? `dry-run · would ${a.tool}: ${a.desc}` : `executed ${a.tool}`,
   }));
+}
+
+/**
+ * Live tools layer: dispatches each action to its real connector.
+ * `live=false` (default) keeps everything dry-run; `live=true` performs real
+ * side-effects for connectors that are configured (others stay dry-run).
+ */
+export async function actLive(
+  actions: { tool: string; desc: string }[],
+  live = false,
+): Promise<ToolOutcome[]> {
+  return Promise.all(actions.map((a) => dispatchAction(a.tool, a.desc, !live)));
 }

@@ -327,15 +327,37 @@ export default function BuildPage() {
     }
   }, [spec, memory]);
 
-  const downloadSpec = useCallback(() => {
+  const [downloading, setDownloading] = useState(false);
+
+  // "Yours to keep": fetch the generated runnable project and zip it client-side.
+  const downloadRepo = useCallback(async () => {
     if (!spec) return;
-    const blob = new Blob([JSON.stringify(spec, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "loop-spec.json";
-    a.click();
-    URL.revokeObjectURL(url);
+    setDownloading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/build", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ spec }),
+      });
+      const data = (await res.json()) as { files?: { path: string; content: string }[]; error?: string };
+      if (!res.ok || data.error || !data.files) throw new Error(data.error || "build failed");
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+      for (const f of data.files) zip.file(f.path, f.content);
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const name = (spec.name || "operating-loop").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      a.href = url;
+      a.download = `${name}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setDownloading(false);
+    }
   }, [spec]);
 
   /* --------------------------------- render -------------------------------- */
@@ -390,7 +412,7 @@ export default function BuildPage() {
 
           {/* spec confirmation */}
           {phase !== "intro" && phase !== "interview" && spec && (
-            <SpecCard spec={spec} onRun={() => runLoop()} onRunReal={(raw) => runLoop(raw)} onDownload={downloadSpec} running={running} ran={phase === "run"} />
+            <SpecCard spec={spec} onRun={() => runLoop()} onRunReal={(raw) => runLoop(raw)} onDownload={downloadRepo} downloading={downloading} running={running} ran={phase === "run"} />
           )}
 
           {/* inline run console */}
@@ -554,6 +576,7 @@ function SpecCard({
   onRun,
   onRunReal,
   onDownload,
+  downloading,
   running,
   ran,
 }: {
@@ -561,6 +584,7 @@ function SpecCard({
   onRun: () => void;
   onRunReal: (raw: string) => void;
   onDownload: () => void;
+  downloading: boolean;
   running: boolean;
   ran: boolean;
 }) {
@@ -618,8 +642,8 @@ function SpecCard({
             <button onClick={() => setPaste((v) => !v)} disabled={running} className="btn btn-outline px-3 py-2">
               {paste ? "Hide" : "Run on my real data"}
             </button>
-            <button onClick={onDownload} className="btn btn-ghost px-3 py-2">
-              Download spec
+            <button onClick={onDownload} disabled={downloading} className="btn btn-ghost px-3 py-2">
+              {downloading ? "Zipping…" : "Download project (.zip)"}
             </button>
           </div>
 
@@ -650,6 +674,18 @@ function SpecCard({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {ran && (
+        <div className="mt-5 flex flex-wrap items-center gap-3 divide-line pt-4">
+          <span className="text-[12.5px] text-[var(--muted)]">This loop is yours to keep —</span>
+          <button onClick={onDownload} disabled={downloading} className="btn btn-primary px-4 py-2">
+            {downloading ? "Zipping…" : "Download project (.zip)"}
+          </button>
+          <a href={`/runs?loop=${encodeURIComponent(spec.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""))}`} className="btn btn-outline px-4 py-2">
+            View run history
+          </a>
         </div>
       )}
     </div>
