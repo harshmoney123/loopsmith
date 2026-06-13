@@ -1,18 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b1020;
-  --foreground: #eef1f8;
-  --accent: #e94560; /* AgentWeb brand accent */
-  --accent-soft: rgba(233, 69, 96, 0.14);
-  --muted: #9aa3b8;
-  --surface: rgba(255, 255, 255, 0.055);
-  --border: rgba(255, 255, 255, 0.1);
+  --bg: #0d0d0d;          /* app canvas */
+  --bg-2: #141414;        /* slightly raised */
+  --panel: #171717;       /* cards / right rail */
+  --panel-2: #232323;     /* user/task bubble */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-soft: rgba(255, 255, 255, 0.05);
+  --fg: #ececec;
+  --muted: #9a9a9a;
+  --faint: #6b6b6b;
+  --accent: #d8703f;      /* Codex-style warm accent, used sparingly */
+  --green: #7bbd8f;
+  --red: #d98a6a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
   --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -24,30 +29,30 @@ body {
 }
 
 body {
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  background:
-    radial-gradient(1100px 600px at 12% -8%, rgba(91, 140, 255, 0.16), transparent 60%),
-    radial-gradient(1000px 620px at 100% 0%, rgba(233, 69, 96, 0.14), transparent 55%),
-    radial-gradient(900px 700px at 50% 120%, rgba(25, 195, 166, 0.1), transparent 60%),
-    #0b1020;
-  background-attachment: fixed;
+  font-size: 14px;
 }
 
-/* Glassmorphism surface */
-.glass {
-  background: var(--surface);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+/* flat surfaces */
+.panel {
+  background: var(--panel);
   border: 1px solid var(--border);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
 }
-.glass-soft {
+.hoverable {
+  border-radius: 8px;
+  transition: background 0.12s ease;
+}
+.hoverable:hover {
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
+}
+.divide-line {
+  border-top: 1px solid var(--border-soft);
 }
 
-/* Blinking caret for the streaming chat effect */
+/* blinking caret for the streaming chat effect */
 .caret::after {
   content: "▋";
   margin-left: 1px;
@@ -55,48 +60,54 @@ body {
   animation: blink 1s steps(2, start) infinite;
 }
 @keyframes blink {
-  to {
-    visibility: hidden;
-  }
+  to { visibility: hidden; }
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.rise { animation: rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.rise { animation: rise 0.4s ease both; }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 0.35; transform: scale(0.85); }
-  50% { opacity: 1; transform: scale(1); }
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
-.pulse-dot { animation: pulse-dot 1.1s ease-in-out infinite; }
+.pulse-dot { animation: pulse-dot 1.2s ease-in-out infinite; }
 
-/* Lightweight chat markdown (matches Emma's prose-sm assistant style) */
+/* lightweight chat markdown */
 .md {
-  font-size: 0.95rem;
-  line-height: 1.65;
-  color: var(--foreground);
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: #dcdcdc;
 }
 .md h2 {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  margin: 1.1em 0 0.5em;
+  letter-spacing: 0.07em;
+  color: var(--faint);
+  margin: 1.2em 0 0.5em;
 }
-.md p { margin: 0.5em 0; }
+.md p { margin: 0.55em 0; }
 .md strong { font-weight: 600; color: #fff; }
 .md em { color: var(--muted); font-style: normal; }
-.md ol { margin: 0.4em 0; padding-left: 1.2em; list-style: decimal; }
-.md ul { margin: 0.4em 0; padding-left: 1.2em; list-style: disc; }
-.md li { margin: 0.35em 0; }
+.md ol { margin: 0.4em 0; padding-left: 1.3em; list-style: decimal; }
+.md ul { margin: 0.4em 0; padding-left: 1.3em; list-style: disc; }
+.md li { margin: 0.4em 0; }
 .md code {
   font-family: var(--font-geist-mono), monospace;
   font-size: 0.82em;
-  background: var(--accent-soft);
-  color: #ffd9e0;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e6e6e6;
   padding: 0.1em 0.4em;
-  border-radius: 6px;
+  border-radius: 5px;
 }
+
+/* thin scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 8px; }
