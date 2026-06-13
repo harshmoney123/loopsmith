@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState, type ReactNode, type ReactElement } from "react";
 import type { Learning, Signal, ToolOutcome } from "@/lib/types";
+import { LoopDiagram, ScoreRing, TrendChart, Confetti } from "@/components/loop/visuals";
 
 /* ---------------------------------- types --------------------------------- */
 
@@ -123,8 +124,12 @@ export default function Home() {
   const [memory, setMemory] = useState<Learning[]>([]);
   const [history, setHistory] = useState<RunSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [confettiKey, setConfettiKey] = useState(0);
   const feedRef = useRef<HTMLDivElement>(null);
+  const bestRef = useRef(0);
   const runCount = history.length;
+  const lastScore = history.length ? history[history.length - 1].score : 0;
+  const bestScore = history.reduce((m, h) => Math.max(m, h.score), 0);
 
   const run = useCallback(async () => {
     setError(null);
@@ -165,8 +170,12 @@ export default function Home() {
               next.newLearnings = data.learnings as Learning[];
           } else if (t === "done") {
             const rec = ev.record as { gate: { score: number; pass: boolean }; learnings: Learning[] };
-            setHistory((h) => [...h, { n: h.length + 1, score: rec.gate.score, pass: rec.gate.pass }]);
+            const newScore = rec.gate.score;
+            setHistory((h) => [...h, { n: h.length + 1, score: newScore, pass: rec.gate.pass }]);
             setMemory((m) => [...m, ...rec.learnings]);
+            // celebrate a new best (not the very first run)
+            if (bestRef.current > 0 && newScore > bestRef.current) setConfettiKey((k) => k + 1);
+            bestRef.current = Math.max(bestRef.current, newScore);
           } else if (t === "error") setError(ev.message as string);
           return next;
         });
@@ -194,10 +203,19 @@ export default function Home() {
 
   return (
     <div className="grid h-screen w-full grid-cols-1 md:grid-cols-[232px_1fr] lg:grid-cols-[232px_1fr_312px]">
+      <Confetti fireKey={confettiKey} />
       {/* ---------------- sidebar ---------------- */}
       <aside className="hidden flex-col border-r border-[var(--border)] bg-[var(--bg-tint)] p-3 md:flex">
         <div className="flex items-center gap-2 px-2 py-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md text-[13px] font-bold text-white" style={{ background: "var(--grad)" }}>L</span>
+          <span className="orb relative flex h-6 w-6 items-center justify-center rounded-md text-[13px] font-bold text-white" style={{ background: "var(--grad)" }}>
+            L
+            {running && (
+              <>
+                <span className="orb-ring" />
+                <span className="orb-ring" />
+              </>
+            )}
+          </span>
           <span className="text-[15px] font-semibold tracking-tight">Loopsmith</span>
         </div>
 
@@ -277,14 +295,16 @@ export default function Home() {
 
                 {live.status.tools !== "idle" && (
                   <Turn k="tools" status={live.status.tools}>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-2">
                       {live.outcomes.length === 0 && <p className="text-[13px] text-[var(--faint)]">preparing actions…</p>}
                       {live.outcomes.map((o, i) => (
-                        <div key={i} className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
-                          <span style={{ color: "var(--green)" }}>✓</span>
-                          <code className="text-[12px]">{o.tool}</code>
-                          <span>{o.result.replace(/^dry-run · would [^:]+: /, "")}</span>
-                          <span className="ml-auto rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-[var(--faint)]" style={{ border: "1px solid var(--border)" }}>dry-run</span>
+                        <div key={i} className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 py-2">
+                          <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-[12px]" style={{ background: "var(--grad-soft)", color: "var(--accent)" }}>✓</span>
+                          <div className="min-w-0 flex-1">
+                            <code className="text-[12px] text-[var(--fg)]">{o.tool}</code>
+                            <p className="truncate text-[12px] text-[var(--muted)]">{o.result.replace(/^dry-run · would [^:]+: /, "")}</p>
+                          </div>
+                          <span className="flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-[var(--faint)]" style={{ border: "1px solid var(--border)" }}>dry-run</span>
                         </div>
                       ))}
                     </div>
@@ -293,30 +313,38 @@ export default function Home() {
 
                 {live.status.gate !== "idle" && (
                   <Turn k="gate" status={live.status.gate}>
-                    {live.score != null && (
-                      <div className="mb-3 flex items-center gap-2.5">
-                        <span className="rounded-md px-2 py-0.5 font-mono text-[13px] font-semibold" style={{ background: live.pass ? "rgba(30,166,114,0.12)" : "rgba(226,89,80,0.12)", color: live.pass ? "var(--green)" : "var(--red)" }}>{live.score}/100</span>
-                        <span className="text-[12px] text-[var(--muted)]">{live.pass ? "passes the gate — ships" : "below bar — held for review"}</span>
-                      </div>
-                    )}
-                    {live.criteria.length > 0 && (
-                      <div className="mb-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                        {live.criteria.map((c) => {
-                          const max = CRITERION_MAX[c.name] ?? 20;
-                          const fit = c.name === "Fit to operator";
-                          return (
-                            <div key={c.name} className="flex items-center gap-2">
-                              <span className="w-24 flex-shrink-0 text-[11px] text-[var(--faint)]">{c.name}</span>
-                              <div className="h-1 flex-1 overflow-hidden rounded-full" style={{ background: "rgba(10,37,64,0.08)" }}>
-                                <div className="h-full rounded-full" style={{ width: `${(c.score / max) * 100}%`, background: fit ? "var(--grad)" : "var(--green)" }} />
+                    {live.score == null ? (
+                      <Streamed text={live.text.gate} running={live.status.gate === "active"} muted />
+                    ) : (
+                      <>
+                        <div className="mb-3 flex flex-col gap-4 sm:flex-row sm:items-center">
+                          <ScoreRing score={live.score} pass={live.pass ?? false} />
+                          <div className="min-w-0 flex-1">
+                            <p className="mb-2 text-[13px] font-medium" style={{ color: live.pass ? "var(--green)" : "var(--red)" }}>
+                              {live.pass ? "Passes the gate — ships" : "Below bar — held for review"}
+                            </p>
+                            {live.criteria.length > 0 && (
+                              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                                {live.criteria.map((c) => {
+                                  const max = CRITERION_MAX[c.name] ?? 20;
+                                  const fit = c.name === "Fit to operator";
+                                  return (
+                                    <div key={c.name} className="flex items-center gap-2">
+                                      <span className="w-24 flex-shrink-0 text-[11px] text-[var(--faint)]">{c.name}</span>
+                                      <div className="h-1 flex-1 overflow-hidden rounded-full" style={{ background: "rgba(10,37,64,0.08)" }}>
+                                        <div className="h-full rounded-full" style={{ width: `${(c.score / max) * 100}%`, background: fit ? "var(--grad)" : "var(--green)" }} />
+                                      </div>
+                                      <span className="w-9 flex-shrink-0 text-right font-mono text-[11px] text-[var(--faint)]">{c.score}/{max}</span>
+                                    </div>
+                                  );
+                                })}
                               </div>
-                              <span className="w-9 flex-shrink-0 text-right font-mono text-[11px] text-[var(--faint)]">{c.score}/{max}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
+                            )}
+                          </div>
+                        </div>
+                        {live.text.gate && <Streamed text={live.text.gate} running={false} muted />}
+                      </>
                     )}
-                    <Streamed text={live.text.gate} running={live.status.gate === "active"} muted />
                   </Turn>
                 )}
 
@@ -365,6 +393,11 @@ export default function Home() {
 
       {/* ---------------- right rail: Loop + Memory ---------------- */}
       <aside className="hidden flex-col gap-4 overflow-y-auto border-l border-[var(--border)] bg-[var(--bg-tint)] p-4 lg:flex">
+        {/* live loop diagram */}
+        <div className="panel p-2">
+          <LoopDiagram status={live?.status ?? { sensor: "idle", policy: "idle", tools: "idle", gate: "idle", learning: "idle" }} />
+        </div>
+
         {/* Loop config (Codex "Environment" analog) */}
         <div>
           <div className="mb-2 flex items-center justify-between">
@@ -383,17 +416,21 @@ export default function Home() {
         <div className="divide-line pt-4">
           <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-[var(--faint)]">Improvement</p>
           {history.length === 0 ? (
-            <p className="text-[13px] text-[var(--faint)]">Gate score per run appears here.</p>
+            <p className="text-[13px] text-[var(--faint)]">Gate score per run appears here — watch it climb.</p>
           ) : (
-            <div className="flex items-end gap-1.5" style={{ height: 76 }}>
-              {history.map((h) => (
-                <div key={h.n} className="flex flex-1 flex-col items-center justify-end gap-1">
-                  <span className="font-mono text-[10px] text-[var(--muted)]">{h.score}</span>
-                  <div className="w-full rounded-sm" style={{ height: `${Math.max(5, h.score * 0.6)}px`, background: h.pass ? "var(--grad)" : "var(--red)" }} />
-                  <span className="text-[10px] text-[var(--faint)]">{h.n}</span>
+            <>
+              <div className="mb-1 flex items-end justify-between">
+                <div>
+                  <div className="font-mono text-[22px] font-semibold leading-none text-[var(--fg)]">{lastScore}</div>
+                  <div className="mt-1 text-[10px] uppercase tracking-wide text-[var(--faint)]">current</div>
                 </div>
-              ))}
-            </div>
+                <div className="text-right">
+                  <div className="font-mono text-[15px] leading-none text-[var(--muted)]">{bestScore}</div>
+                  <div className="mt-1 text-[10px] uppercase tracking-wide text-[var(--faint)]">best</div>
+                </div>
+              </div>
+              <TrendChart history={history} />
+            </>
           )}
         </div>
 
@@ -432,7 +469,7 @@ function Row({ label, value }: { label: string; value: string }) {
 function Turn({ k, status, children }: { k: StageKey; status: StageStatus; children: ReactNode }) {
   const meta = STAGES.find((s) => s.key === k)!;
   return (
-    <div className="rise">
+    <div className={`rise rounded-xl p-3 ${status === "active" ? "beam" : ""}`}>
       <div className="mb-2 flex items-center gap-2">
         <span className={status === "active" ? "text-[var(--accent)]" : "text-[var(--faint)]"}>
           {status === "active" ? (
@@ -460,7 +497,7 @@ function Streamed({ text, running, muted }: { text: string; running: boolean; mu
         <span className="dot" />
       </div>
     );
-  return <div className={`md rise ${muted ? "opacity-90" : ""}`} dangerouslySetInnerHTML={{ __html: renderMd(text) }} />;
+  return <div className={`md blur-in ${muted ? "opacity-90" : ""}`} dangerouslySetInnerHTML={{ __html: renderMd(text) }} />;
 }
 
 function EmptyState({ onRun, running }: { onRun: () => void; running: boolean }) {
