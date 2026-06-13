@@ -1,37 +1,45 @@
 /**
  * Loopsmith shared types — the contract between the 5 layers and the builder.
- * Keep this file dependency-free; it is imported by both the engine and the generated loops.
+ * Dependency-free; imported by both the engine and the generated loops.
  */
 
 /** A normalized signal emitted by the Sensor layer, regardless of source. */
 export interface Signal {
   source: string; // "slack" | "gmail" | "fathom" | "calendar" | ...
-  ts: string; // ISO timestamp
-  actor?: string; // who/what produced it
-  text: string; // normalized content
+  ts: string;
+  actor?: string;
+  text: string;
   meta?: Record<string, unknown>;
 }
 
-/** A single action the Tools layer should execute. */
-export interface ToolCall {
-  tool: string; // "gmail.draft" | "slack.send" | "notion.create" | ...
-  args: Record<string, unknown>;
-  dryRun?: boolean; // default true for demo safety
+/** One thing that matters this run + the action to take on it. */
+export interface Move {
+  title: string;
+  why: string; // why it matters, grounded in the signals
+  action: string; // the concrete next action
+  tool: string; // which tool would execute it (e.g. "gmail.draft")
 }
 
 /** The decision produced by the Business-logic / Policy layer. */
 export interface Plan {
-  focus: string; // what matters this run, in plain language
-  reasoning: string; // why these signals were chosen
-  toolCalls: ToolCall[];
+  focus: string; // the single most important theme this run
+  reasoning: string; // why these moves, citing signals
+  moves: Move[];
+}
+
+/** Result of the Tools layer executing the plan (dry-run by default). */
+export interface ToolOutcome {
+  tool: string;
+  ok: boolean;
+  result: string;
 }
 
 /** The Quality-gate verdict. */
 export interface GateResult {
   score: number; // 0–100
-  pass: boolean; // score >= rubric threshold
+  pass: boolean;
   criteria: { name: string; score: number; note: string }[];
-  revisionHint?: string; // what to fix if it failed
+  revisionHint: string;
 }
 
 /** A durable learning written by the Learning layer. */
@@ -43,25 +51,25 @@ export interface Learning {
   createdAt: string;
 }
 
-/** One complete pass through the loop, persisted to runs/<ts>/. */
+/** One complete pass through the loop. */
 export interface RunRecord {
   ts: string;
   signals: Signal[];
   plan: Plan;
+  outcomes: ToolOutcome[];
   output: string; // markdown the user acts on
   gate: GateResult;
-  learnings: Learning[];
+  learnings: Learning[]; // NEW learnings written this run
+  priorLearningCount: number; // how many learnings fed this run's policy
 }
 
-/** The structured spec the Interviewer produces and the Architect/Codegen consume. */
+/** The structured spec the Interviewer produces and the engine consumes. */
 export interface LoopSpec {
   name: string;
   description: string;
-  sensors: string[]; // chosen MCP sources
-  cadence: string; // e.g. "weekly:mon:08:00"
-  decisionPolicy: string; // plain-English policy the user agreed to
-  tools: string[]; // chosen MCP write tools
-  outputFormat: string; // what the deliverable looks like
+  sensors: string[];
+  cadence: string;
+  decisionPolicy: string;
+  outputFormat: string;
   rubric: { name: string; weight: number; description: string }[];
-  memoryKeys: string[]; // what kinds of learnings to track
 }

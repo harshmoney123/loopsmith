@@ -1,38 +1,47 @@
-import type { LoopSpec, RunRecord } from "@/lib/types";
+import type { LoopSpec, Learning, RunRecord } from "@/lib/types";
+import { streamText } from "@/lib/anthropic";
 import { ingest } from "./sensor";
-import { recall, reflect } from "./learning";
-import { decide } from "./policy";
-import { act } from "./tools";
-import { grade } from "./gate";
+import { policyPrompt } from "./policy";
+import { parseActions, act } from "./tools";
+import { gatePrompt, parseGate } from "./gate";
+import { learningPrompt, parseLearnings } from "./learning";
 
 /**
- * THE LOOP — orchestrates all 5 layers for one run and persists runs/<ts>/.
- * sensor → (recall) → policy → tools → render → gate → learning
- *
- * This same orchestrator ships inside every generated loop, so the builder and
- * the build share one engine (PLAN.md §5).
+ * Non-streaming orchestration of all 5 layers for one run:
+ * sensor → policy → tools → gate → learning. The API route has a streaming
+ * variant for the live UI; this version is what the generated loop / tests use.
  */
-export async function runOnce(spec: LoopSpec): Promise<RunRecord> {
+export async function runOnce(
+  spec: LoopSpec,
+  priorLearnings: Learning[] = [],
+): Promise<RunRecord> {
   const ts = new Date().toISOString();
+  const noop = () => {};
 
   const signals = await ingest(spec.sensors);
-  const learnings = await recall();
-  const plan = await decide(signals, spec.decisionPolicy, learnings);
-  await act(plan.toolCalls);
 
-  // The output is the user-facing deliverable rendered from the plan.
-  const output = renderOutput(plan, spec);
+  const p = policyPrompt(signals, spec, priorLearnings);
+  const output = await streamText({ ...p, onToken: noop });
 
-  const gate = await grade(output, spec.rubric);
+  const actions = parseActions(output);
+  const outcomes = act(actions, true);
 
-  // Only reflect once the output has been graded — the score is a learning input.
-  const newLearnings = await reflect(
-    { ts, signals, plan, output, gate, learnings: [] },
-  );
+  const g = gatePrompt(output, spec.rubric, priorLearnings.length);
+  const gateText = await streamText({ ...g, onToken: noop, maxTokens: 700 });
+  const gate = parseGate(gateText, priorLearnings.length);
 
-  return { ts, signals, plan, output, gate, learnings: newLearnings };
-}
+  const l = learningPrompt({ spec, output, gateText, score: gate.score });
+  const learnText = await streamText({ ...l, onToken: noop, maxTokens: 500 });
+  const learnings = parseLearnings(learnText, ts);
 
-function renderOutput(plan: { focus: string }, spec: LoopSpec): string {
-  return `# ${spec.name}\n\n**Focus this run:** ${plan.focus}\n`;
+  return {
+    ts,
+    signals,
+    plan: { focus: "", reasoning: output, moves: [] },
+    outcomes,
+    output,
+    gate,
+    learnings,
+    priorLearningCount: priorLearnings.length,
+  };
 }

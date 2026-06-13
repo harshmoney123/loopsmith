@@ -1,0 +1,101 @@
+import type { Learning, RunRecord } from "@/lib/types";
+import { GTM_LOOP } from "@/lib/spec";
+import { streamText } from "@/lib/anthropic";
+import { ingest } from "@/engine/sensor";
+import { policyPrompt } from "@/engine/policy";
+import { parseActions, act } from "@/engine/tools";
+import { gatePrompt, parseGate } from "@/engine/gate";
+import { learningPrompt, parseLearnings } from "@/engine/learning";
+
+export const runtime = "nodejs";
+export const maxDuration = 120;
+
+/**
+ * Streams one full loop run as NDJSON events so the UI can render the 5 stages
+ * live with a chat-typing effect:
+ *   {type:"signals"}              sensor done
+ *   {type:"stage",phase:"start"}  a stage began
+ *   {type:"token"}                an Opus text delta (the typing effect)
+ *   {type:"stage",phase:"done"}   a stage finished (carries parsed data)
+ *   {type:"done", record}         the whole RunRecord
+ */
+export async function POST(req: Request) {
+  let priorLearnings: Learning[] = [];
+  let humanEdit: string | undefined;
+  try {
+    const body = await req.json();
+    if (Array.isArray(body?.priorLearnings)) priorLearnings = body.priorLearnings;
+    if (typeof body?.humanEdit === "string") humanEdit = body.humanEdit;
+  } catch {
+    /* empty body is fine */
+  }
+
+  const spec = GTM_LOOP;
+  const ts = new Date().toISOString();
+  const encoder = new TextEncoder();
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (obj: unknown) =>
+        controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+      const tokens = (stage: string) => (text: string) => send({ type: "token", stage, text });
+
+      try {
+        // 1) SENSOR
+        send({ type: "stage", stage: "sensor", phase: "start" });
+        const signals = await ingest(spec.sensors);
+        send({ type: "signals", signals });
+        send({ type: "stage", stage: "sensor", phase: "done", data: { count: signals.length } });
+
+        // 2) POLICY (streamed)
+        send({ type: "stage", stage: "policy", phase: "start", data: { priorLearningCount: priorLearnings.length } });
+        const p = policyPrompt(signals, spec, priorLearnings);
+        const output = await streamText({ ...p, onToken: tokens("policy") });
+        send({ type: "stage", stage: "policy", phase: "done" });
+
+        // 3) TOOLS (instant, dry-run)
+        send({ type: "stage", stage: "tools", phase: "start" });
+        const outcomes = act(parseActions(output), true);
+        send({ type: "stage", stage: "tools", phase: "done", data: { outcomes } });
+
+        // 4) GATE (streamed)
+        send({ type: "stage", stage: "gate", phase: "start" });
+        const g = gatePrompt(output, spec.rubric, priorLearnings.length);
+        const gateText = await streamText({ ...g, onToken: tokens("gate"), maxTokens: 700 });
+        const gate = parseGate(gateText, priorLearnings.length);
+        send({ type: "stage", stage: "gate", phase: "done", data: { score: gate.score, pass: gate.pass, criteria: gate.criteria } });
+
+        // 5) LEARNING (streamed)
+        send({ type: "stage", stage: "learning", phase: "start" });
+        const l = learningPrompt({ spec, output, gateText, score: gate.score, humanEdit });
+        const learnText = await streamText({ ...l, onToken: tokens("learning"), maxTokens: 500 });
+        const learnings = parseLearnings(learnText, ts);
+        send({ type: "stage", stage: "learning", phase: "done", data: { learnings } });
+
+        const record: RunRecord = {
+          ts,
+          signals,
+          plan: { focus: "", reasoning: output, moves: [] },
+          outcomes,
+          output,
+          gate,
+          learnings,
+          priorLearningCount: priorLearnings.length,
+        };
+        send({ type: "done", record });
+      } catch (err) {
+        send({ type: "error", message: err instanceof Error ? err.message : String(err) });
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "application/x-ndjson; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+    },
+  });
+}
