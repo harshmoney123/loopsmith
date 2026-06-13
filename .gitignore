@@ -55,3 +55,7 @@ shot-*.png
 
 # codegen materialization test scratch
 /.codegen-test/
+
+# full transcript export (contains pasted secrets) — never commit
+session-log.md
+/session-log*.md
