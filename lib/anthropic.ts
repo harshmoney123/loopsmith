@@ -40,3 +40,31 @@ export async function streamText(opts: {
   const text = final.content.find((b) => b.type === "text");
   return text && text.type === "text" ? text.text : "";
 }
+
+/** A JSON Schema object (the subset structured outputs supports). */
+export type JsonSchema = Record<string, unknown>;
+
+/**
+ * Call Opus 4.8 and get back a schema-valid object of type T. Used by the
+ * builder's interview, where we need a reliable shape (next question OR spec).
+ */
+export async function structured<T>(opts: {
+  system: string;
+  user: string;
+  schema: JsonSchema;
+  maxTokens?: number;
+}): Promise<T> {
+  const res = await client().messages.create({
+    model: MODEL,
+    max_tokens: opts.maxTokens ?? 2000,
+    system: opts.system,
+    output_config: {
+      effort: "low",
+      format: { type: "json_schema", schema: opts.schema },
+    },
+    messages: [{ role: "user", content: opts.user }],
+  });
+  const text = res.content.find((b) => b.type === "text");
+  if (!text || text.type !== "text") throw new Error("model returned no text block");
+  return JSON.parse(text.text) as T;
+}

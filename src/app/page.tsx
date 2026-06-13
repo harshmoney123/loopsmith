@@ -197,15 +197,11 @@ export default function Home() {
       {/* ---------------- sidebar ---------------- */}
       <aside className="hidden flex-col border-r border-[var(--border)] bg-[var(--bg)] p-3 md:flex">
         <div className="flex items-center gap-2 px-2 py-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md text-[13px] font-bold text-black" style={{ background: "var(--accent)" }}>L</span>
+          <span className="flex h-6 w-6 items-center justify-center rounded-md text-[13px] font-bold text-white" style={{ background: "var(--accent)" }}>L</span>
           <span className="text-[15px] font-semibold tracking-tight">Loopsmith</span>
         </div>
 
-        <button
-          onClick={run}
-          disabled={running}
-          className="mt-3 flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-[13px] text-[var(--fg)] transition-colors hover:bg-white/[0.04] disabled:opacity-50"
-        >
+        <button onClick={run} disabled={running} className="btn btn-outline mt-3 px-3 py-2">
           <Icon k="spark" className="h-4 w-4 text-[var(--accent)]" />
           {running ? "Running…" : "New run"}
         </button>
@@ -343,7 +339,7 @@ export default function Home() {
         <div className="px-5 pb-5">
           <div className="mx-auto max-w-2xl">
             <div className="panel flex items-center gap-3 px-3 py-2.5">
-              <button onClick={run} disabled={running} className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted)] hover:bg-white/[0.04] disabled:opacity-50">+</button>
+              <button onClick={run} disabled={running} className="btn btn-outline h-7 w-7 p-0 text-base">+</button>
               <span className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-[var(--muted)]" style={{ border: "1px solid var(--border)" }}>
                 <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--accent)" }} />
                 Dry-run
@@ -356,7 +352,7 @@ export default function Home() {
                 <button
                   onClick={run}
                   disabled={running}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ececec] text-black transition-opacity disabled:opacity-50"
+                  className="btn btn-light h-8 w-8 rounded-full p-0"
                   aria-label="Run loop"
                 >
                   {running ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/40 border-t-transparent" /> : <Icon k="send" className="h-4 w-4" />}
@@ -455,8 +451,16 @@ function Turn({ k, status, children }: { k: StageKey; status: StageStatus; child
 }
 
 function Streamed({ text, running, muted }: { text: string; running: boolean; muted?: boolean }) {
-  if (!text && running) return <p className="text-[13px] text-[var(--faint)] caret">thinking</p>;
-  return <div className={`md ${running ? "caret" : ""} ${muted ? "opacity-90" : ""}`} dangerouslySetInnerHTML={{ __html: renderMd(text) }} />;
+  if (running)
+    return (
+      <div className="thinking">
+        <span>Thinking</span>
+        <span className="dot" />
+        <span className="dot" />
+        <span className="dot" />
+      </div>
+    );
+  return <div className={`md rise ${muted ? "opacity-90" : ""}`} dangerouslySetInnerHTML={{ __html: renderMd(text) }} />;
 }
 
 function EmptyState({ onRun, running }: { onRun: () => void; running: boolean }) {
@@ -467,11 +471,7 @@ function EmptyState({ onRun, running }: { onRun: () => void; running: boolean })
         actions, grades itself against a quality bar, and writes back what it learned — so the next
         run is better.
       </p>
-      <button
-        onClick={onRun}
-        disabled={running}
-        className="rounded-lg bg-[#ececec] px-4 py-2 text-[13px] font-medium text-black transition-opacity disabled:opacity-50"
-      >
+      <button onClick={onRun} disabled={running} className="btn btn-primary px-4 py-2">
         {running ? "Running…" : "Run the loop"}
       </button>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-[11px] text-[var(--faint)]">
