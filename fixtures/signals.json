@@ -1,0 +1,37 @@
+[
+  {
+    "source": "slack",
+    "ts": "2026-06-12T16:04:00Z",
+    "actor": "#sales",
+    "text": "Acme Corp asked for pricing again — third time this week. They want to close before end of quarter.",
+    "meta": { "channel": "sales", "priority_hint": "high" }
+  },
+  {
+    "source": "gmail",
+    "ts": "2026-06-12T18:22:00Z",
+    "actor": "ceo@betaco.com",
+    "text": "Following up on the pilot. Our team loved the demo. What does onboarding look like?",
+    "meta": { "thread": "betaco-pilot" }
+  },
+  {
+    "source": "fathom",
+    "ts": "2026-06-11T21:00:00Z",
+    "actor": "Discovery call — Northwind",
+    "text": "Prospect repeatedly flagged that integration with their CRM is the deciding factor. Budget approved, decision in 2 weeks.",
+    "meta": { "duration_min": 32 }
+  },
+  {
+    "source": "calendar",
+    "ts": "2026-06-16T17:00:00Z",
+    "actor": "Northwind <> Us — Technical deep dive",
+    "text": "Upcoming: technical deep dive with Northwind eng team, Monday 10am.",
+    "meta": { "attendees": 4 }
+  },
+  {
+    "source": "slack",
+    "ts": "2026-06-12T14:10:00Z",
+    "actor": "#general",
+    "text": "Reminder: standup moved to 11. Coffee machine on 2nd floor is fixed.",
+    "meta": { "channel": "general", "priority_hint": "low" }
+  }
+]
