@@ -8,8 +8,13 @@ export const runtime = "nodejs";
  * user keeps). Deterministic, so this is instant.
  */
 export async function POST(req: Request) {
+  let body: { spec?: unknown };
   try {
-    const body = await req.json();
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "invalid JSON body" }, { status: 400 });
+  }
+  try {
     const spec = body?.spec as LoopSpec | undefined;
     if (!spec?.name || !Array.isArray(spec.sensors)) {
       return Response.json({ error: "valid spec required" }, { status: 400 });

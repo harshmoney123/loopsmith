@@ -9,8 +9,13 @@ export const maxDuration = 60;
  * is one short question, so latency is low and the UI shows a "thinking" stall.
  */
 export async function POST(req: Request) {
+  let body: { description?: unknown; history?: unknown };
   try {
-    const body = await req.json();
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "invalid JSON body" }, { status: 400 });
+  }
+  try {
     const description: string = typeof body?.description === "string" ? body.description : "";
     const history: InterviewTurn[] = Array.isArray(body?.history) ? body.history : [];
     if (!description.trim()) {

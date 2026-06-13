@@ -10,7 +10,10 @@ export const runtime = "nodejs";
  */
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const loopId = url.searchParams.get("loopId") || "default";
+  // Sanitize: the store sanitizes internally for the filesystem, but never echo
+  // raw user input (e.g. "../etc/passwd") back in the response either.
+  const raw = url.searchParams.get("loopId") || "default";
+  const loopId = raw.replace(/[^a-z0-9_-]/gi, "-") || "default";
   try {
     const runs = await listRuns(loopId);
     const memory = await loadMemory(loopId);
