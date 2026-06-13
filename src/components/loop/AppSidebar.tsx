@@ -10,6 +10,7 @@ const ICONS: Record<string, ReactElement> = {
   build: <path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />,
   runs: <path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-7 3.4M3 4v3.4h3.4M12 8v4l3 2" />,
   memory: <path d="M9 3v2m6-2v2M9 19v2m6-2v2M3 9h2m-2 6h2m14-6h2m-2 6h2M6 6h12v12H6z" />,
+  connect: <path d="M10 14a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5l-1 1M14 10a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5l1-1" />,
 };
 
 function NavIcon({ k }: { k: string }) {
@@ -24,6 +25,7 @@ const NAV = [
   { href: "/", label: "Console", icon: "console", hint: "Run the live loop" },
   { href: "/build", label: "Build", icon: "build", hint: "Design a new loop" },
   { href: "/runs", label: "Runs", icon: "runs", hint: "History & schedule" },
+  { href: "/connect", label: "Connections", icon: "connect", hint: "Connect your tools" },
 ];
 
 export function AppSidebar() {
