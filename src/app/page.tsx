@@ -195,9 +195,9 @@ export default function Home() {
   return (
     <div className="grid h-screen w-full grid-cols-1 md:grid-cols-[232px_1fr] lg:grid-cols-[232px_1fr_312px]">
       {/* ---------------- sidebar ---------------- */}
-      <aside className="hidden flex-col border-r border-[var(--border)] bg-[var(--bg)] p-3 md:flex">
+      <aside className="hidden flex-col border-r border-[var(--border)] bg-[var(--bg-tint)] p-3 md:flex">
         <div className="flex items-center gap-2 px-2 py-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md text-[13px] font-bold text-white" style={{ background: "var(--accent)" }}>L</span>
+          <span className="flex h-6 w-6 items-center justify-center rounded-md text-[13px] font-bold text-white" style={{ background: "var(--grad)" }}>L</span>
           <span className="text-[15px] font-semibold tracking-tight">Loopsmith</span>
         </div>
 
@@ -236,7 +236,7 @@ export default function Home() {
         <div ref={feedRef} className="flex-1 overflow-y-auto px-5 py-6">
           <div className="mx-auto flex max-w-2xl flex-col gap-6">
             {/* task bubble (Codex-style user card) */}
-            <div className="self-end rounded-2xl rounded-br-md bg-[var(--panel-2)] px-4 py-3 text-[13.5px] leading-relaxed text-[var(--fg)] max-w-[85%]">
+            <div className="self-end rounded-2xl rounded-br-md border border-[var(--border)] bg-[var(--panel-2)] px-4 py-3 text-[13.5px] leading-relaxed text-[var(--fg)] max-w-[85%]">
               Turn this week&apos;s Slack, customer calls, emails and calendar into the 2–3 moves that
               actually move revenue — and draft the outreach. Check it before it ships, and learn my
               preferences over time.
@@ -295,7 +295,7 @@ export default function Home() {
                   <Turn k="gate" status={live.status.gate}>
                     {live.score != null && (
                       <div className="mb-3 flex items-center gap-2.5">
-                        <span className="rounded-md px-2 py-0.5 font-mono text-[13px] font-semibold" style={{ background: live.pass ? "rgba(123,189,143,0.14)" : "rgba(217,138,106,0.14)", color: live.pass ? "var(--green)" : "var(--red)" }}>{live.score}/100</span>
+                        <span className="rounded-md px-2 py-0.5 font-mono text-[13px] font-semibold" style={{ background: live.pass ? "rgba(30,166,114,0.12)" : "rgba(226,89,80,0.12)", color: live.pass ? "var(--green)" : "var(--red)" }}>{live.score}/100</span>
                         <span className="text-[12px] text-[var(--muted)]">{live.pass ? "passes the gate — ships" : "below bar — held for review"}</span>
                       </div>
                     )}
@@ -307,8 +307,8 @@ export default function Home() {
                           return (
                             <div key={c.name} className="flex items-center gap-2">
                               <span className="w-24 flex-shrink-0 text-[11px] text-[var(--faint)]">{c.name}</span>
-                              <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.07]">
-                                <div className="h-full rounded-full" style={{ width: `${(c.score / max) * 100}%`, background: fit ? "var(--accent)" : "var(--green)" }} />
+                              <div className="h-1 flex-1 overflow-hidden rounded-full" style={{ background: "rgba(10,37,64,0.08)" }}>
+                                <div className="h-full rounded-full" style={{ width: `${(c.score / max) * 100}%`, background: fit ? "var(--grad)" : "var(--green)" }} />
                               </div>
                               <span className="w-9 flex-shrink-0 text-right font-mono text-[11px] text-[var(--faint)]">{c.score}/{max}</span>
                             </div>
@@ -352,7 +352,7 @@ export default function Home() {
                 <button
                   onClick={run}
                   disabled={running}
-                  className="btn btn-light h-8 w-8 rounded-full p-0"
+                  className="btn btn-primary h-8 w-8 rounded-full p-0"
                   aria-label="Run loop"
                 >
                   {running ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/40 border-t-transparent" /> : <Icon k="send" className="h-4 w-4" />}
@@ -364,7 +364,7 @@ export default function Home() {
       </section>
 
       {/* ---------------- right rail: Loop + Memory ---------------- */}
-      <aside className="hidden flex-col gap-4 overflow-y-auto border-l border-[var(--border)] bg-[var(--bg)] p-4 lg:flex">
+      <aside className="hidden flex-col gap-4 overflow-y-auto border-l border-[var(--border)] bg-[var(--bg-tint)] p-4 lg:flex">
         {/* Loop config (Codex "Environment" analog) */}
         <div>
           <div className="mb-2 flex items-center justify-between">
@@ -389,7 +389,7 @@ export default function Home() {
               {history.map((h) => (
                 <div key={h.n} className="flex flex-1 flex-col items-center justify-end gap-1">
                   <span className="font-mono text-[10px] text-[var(--muted)]">{h.score}</span>
-                  <div className="w-full rounded-sm" style={{ height: `${Math.max(5, h.score * 0.6)}px`, background: h.pass ? "var(--green)" : "var(--red)" }} />
+                  <div className="w-full rounded-sm" style={{ height: `${Math.max(5, h.score * 0.6)}px`, background: h.pass ? "var(--grad)" : "var(--red)" }} />
                   <span className="text-[10px] text-[var(--faint)]">{h.n}</span>
                 </div>
               ))}
