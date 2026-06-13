@@ -144,6 +144,11 @@ export default function LoopsPage() {
                     </span>
                   )}
                 </div>
+                {/* distinguishing id — shown when it differs from the name's slug,
+                    so two loops that share a display name are still tellable apart (#13) */}
+                {l.loopId !== l.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") && (
+                  <p className="-mt-0.5 mb-1 font-mono text-[10.5px] text-[var(--faint)]">{l.loopId}</p>
+                )}
                 <p className="line-clamp-2 text-[12.5px] leading-snug text-[var(--muted)]">{l.description}</p>
 
                 <div className="mt-2 flex flex-wrap gap-1.5 text-[10.5px] text-[var(--faint)]">
