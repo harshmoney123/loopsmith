@@ -2,8 +2,10 @@ import type { Signal, ToolOutcome } from "@/lib/types";
 import { env, envAny, type Connector } from "./types";
 
 /**
- * Notion connector — reads recently-edited pages (search) and can create a task
- * page (write). Activates with an integration token (NOTION_TOKEN / NOTION_API_KEY).
+ * Notion connector — reads recently-edited pages (search) and creates real task
+ * rows (write). Activates with an integration token (NOTION_TOKEN / NOTION_API_KEY).
+ * Writes are schema-aware: it discovers the database's title column, so it works
+ * on ANY database, and drops the full detail into the page body.
  */
 const V = "2022-06-28";
 
@@ -15,10 +17,28 @@ function headers() {
   };
 }
 
+// Cache the title-property name per database so we don't re-fetch each write.
+const titlePropCache: Record<string, string> = {};
+
+async function titleProp(db: string): Promise<string> {
+  if (titlePropCache[db]) return titlePropCache[db];
+  try {
+    const meta = await fetch(`https://api.notion.com/v1/databases/${db}`, { headers: headers() }).then(
+      (r) => r.json() as Promise<{ properties?: Record<string, { type: string }> }>,
+    );
+    const props = meta.properties || {};
+    const name = Object.keys(props).find((k) => props[k].type === "title") || "Name";
+    titlePropCache[db] = name;
+    return name;
+  } catch {
+    return "Name";
+  }
+}
+
 export const notion: Connector = {
   source: "notion",
   label: "Notion",
-  note: "set NOTION_TOKEN (integration must be shared to the workspace)",
+  note: "set NOTION_TOKEN (share the integration to your database)",
 
   configured() {
     return !!envAny("NOTION_TOKEN", "NOTION_API_KEY");
@@ -57,17 +77,33 @@ export const notion: Connector = {
       return { tool: `notion.${verb}`, ok: true, result: `dry-run · would notion.${verb}: ${desc}` };
     }
     try {
+      const prop = await titleProp(db);
+      // Concise title (first sentence / 90 chars), full detail in the body.
+      const title = (desc.split(/[.!?]\s/)[0] || desc).slice(0, 90);
       const res = await fetch("https://api.notion.com/v1/pages", {
         method: "POST",
         headers: headers(),
         body: JSON.stringify({
           parent: { database_id: db },
-          properties: { Name: { title: [{ text: { content: desc.slice(0, 200) } }] } },
+          properties: { [prop]: { title: [{ text: { content: title } }] } },
+          children: [
+            { object: "block", type: "paragraph", paragraph: { rich_text: [{ text: { content: desc } }] } },
+            {
+              object: "block",
+              type: "callout",
+              callout: {
+                icon: { emoji: "🔁" },
+                rich_text: [{ text: { content: `Created by Loopsmith · ${new Date().toLocaleString()}` } }],
+              },
+            },
+          ],
         }),
       });
-      return res.ok
-        ? { tool: `notion.${verb}`, ok: true, result: `created Notion task: ${desc.slice(0, 80)}` }
-        : { tool: `notion.${verb}`, ok: false, result: `notion error ${res.status}` };
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        return { tool: `notion.${verb}`, ok: false, result: `notion error ${res.status}: ${body.slice(0, 120)}` };
+      }
+      return { tool: `notion.${verb}`, ok: true, result: `✓ created Notion task: ${title}` };
     } catch (e) {
       return { tool: `notion.${verb}`, ok: false, result: e instanceof Error ? e.message : "notion failed" };
     }

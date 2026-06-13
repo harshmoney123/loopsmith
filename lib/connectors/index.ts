@@ -87,7 +87,18 @@ export async function readLiveSignals(sources: string[], limit = 8): Promise<Sig
 export async function dispatchAction(tool: string, desc: string, dryRun = true): Promise<ToolOutcome> {
   await loadCreds();
   const [source, verb] = tool.split(".");
-  const c = CONNECTORS[source];
-  if (c?.write && c.configured()) return c.write(verb || "action", desc, dryRun);
+  const native = CONNECTORS[source];
+  if (native?.write && native.configured()) return native.write(verb || "action", desc, dryRun);
+
+  // The action's native tool isn't connected — route it to the first configured
+  // write connector (e.g. Notion), so every decided move still lands somewhere
+  // visible (a task row). Keeps the demo table filling reliably.
+  if (!dryRun) {
+    const fallback = Object.values(CONNECTORS).find((c) => c.write && c.configured());
+    if (fallback) {
+      const out = await fallback.write!("create", desc, false);
+      return { ...out, tool: `${tool} → ${fallback.source}.create` };
+    }
+  }
   return { tool, ok: true, result: `dry-run · would ${tool}: ${desc}` };
 }
