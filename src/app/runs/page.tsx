@@ -68,7 +68,10 @@ export default function RunsPage() {
           <span className="flex h-6 w-6 items-center justify-center rounded-md text-[13px] font-bold text-white" style={{ background: "var(--grad)" }}>L</span>
           <span className="text-[15px] font-semibold tracking-tight">Loopsmith</span>
         </Link>
-        <button onClick={() => load(loopId)} className="btn btn-outline px-3 py-1.5">Refresh</button>
+        <div className="flex items-center gap-2">
+          <Link href="/loops" className="btn btn-ghost px-3 py-1.5">Your loops</Link>
+          <button onClick={() => load(loopId)} className="btn btn-outline px-3 py-1.5">Refresh</button>
+        </div>
       </header>
 
       <div className="mb-2 flex items-end justify-between">
