@@ -257,8 +257,10 @@ export default function BuildPage() {
 
   /* -------------------------------- run loop -------------------------------- */
 
-  const runLoop = useCallback(async (rawContext?: string) => {
+  const runLoop = useCallback(async (rawContext?: string, humanEdit?: string) => {
     if (!spec) return;
+    setLastRaw(rawContext || "");
+    setNote("");
     setPhase("run");
     setError(null);
     setRunning(true);
@@ -268,7 +270,7 @@ export default function BuildPage() {
       const res = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ spec, priorLearnings: memory, rawContext: rawContext || "" }),
+        body: JSON.stringify({ spec, priorLearnings: memory, rawContext: rawContext || "", humanEdit: humanEdit || "" }),
       });
       if (!res.body) throw new Error("no response stream");
       const reader = res.body.getReader();
@@ -328,6 +330,8 @@ export default function BuildPage() {
   }, [spec, memory]);
 
   const [downloading, setDownloading] = useState(false);
+  const [lastRaw, setLastRaw] = useState("");
+  const [note, setNote] = useState("");
 
   // "Yours to keep": fetch the generated runnable project and zip it client-side.
   const downloadRepo = useCallback(async () => {
@@ -417,6 +421,17 @@ export default function BuildPage() {
 
           {/* inline run console */}
           {phase === "run" && live && <RunLive live={live} />}
+
+          {/* human-in-the-loop feedback — the heart of self-improvement */}
+          {phase === "run" && live && !running && live.status.learning === "done" && (
+            <Feedback
+              note={note}
+              setNote={setNote}
+              newLearnings={live.newLearnings.length}
+              onRefine={() => runLoop(lastRaw, note)}
+              onRerun={() => runLoop(lastRaw)}
+            />
+          )}
 
           {error && (
             <div className="rounded-lg border border-[var(--red)]/30 bg-[var(--red)]/10 p-3 text-[13px] text-[var(--red)]">{error}</div>
@@ -825,4 +840,49 @@ function Streamed({ text, running, muted }: { text: string; running: boolean; mu
       </div>
     );
   return <div className={`md rise ${muted ? "opacity-90" : ""}`} dangerouslySetInnerHTML={{ __html: renderMd(text) }} />;
+}
+
+function Feedback({
+  note,
+  setNote,
+  newLearnings,
+  onRefine,
+  onRerun,
+}: {
+  note: string;
+  setNote: (s: string) => void;
+  newLearnings: number;
+  onRefine: () => void;
+  onRerun: () => void;
+}) {
+  return (
+    <div className="rise panel p-5">
+      <div className="mb-1 flex items-center gap-2">
+        <span className="text-[var(--accent)]"><Icon k="learning" className="h-4 w-4" /></span>
+        <h3 className="text-[14px] font-semibold text-[var(--fg)]">Make it yours</h3>
+      </div>
+      <p className="text-[13px] leading-relaxed text-[var(--muted)]">
+        {newLearnings > 0
+          ? `This run wrote ${newLearnings} lesson${newLearnings > 1 ? "s" : ""} to memory. Tell it what you'd change — it learns your preference and the next run applies it.`
+          : "Tell it what you'd change — it learns your preference and the next run applies it."}
+      </p>
+      <textarea
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        rows={3}
+        placeholder="e.g. Always lead with the dollar amount. Keep drafts under 4 sentences. Don't flag anything under $5k."
+        className="mt-3 w-full resize-y rounded-lg border border-[var(--border)] bg-[var(--panel)] p-3 text-[13px] leading-relaxed text-[var(--fg)] outline-none placeholder:text-[var(--faint)]"
+      />
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        <button onClick={onRefine} disabled={note.trim().length < 3} className="btn btn-primary px-4 py-2">
+          <Icon k="learning" className="h-4 w-4" />
+          Teach &amp; re-run
+        </button>
+        <button onClick={onRerun} className="btn btn-outline px-3 py-2">
+          Re-run as-is
+        </button>
+        <span className="text-[11px] text-[var(--faint)]">Watch “Fit to operator” climb as it learns you.</span>
+      </div>
+    </div>
+  );
 }

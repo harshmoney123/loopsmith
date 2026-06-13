@@ -82,7 +82,7 @@ export async function POST(req: Request) {
 
         // 2) POLICY (streamed)
         send({ type: "stage", stage: "policy", phase: "start", data: { priorLearningCount: priorLearnings.length } });
-        const p = policyPrompt(signals, spec, priorLearnings);
+        const p = policyPrompt(signals, spec, priorLearnings, humanEdit);
         const output = await streamText({ ...p, onToken: tokens("policy") });
         send({ type: "stage", stage: "policy", phase: "done" });
 

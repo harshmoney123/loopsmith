@@ -10,6 +10,7 @@ export function policyPrompt(
   signals: Signal[],
   spec: LoopSpec,
   learnings: Learning[],
+  humanEdit?: string,
 ): { system: string; user: string } {
   const system = [
     `You are the decision brain of "${spec.name}", a self-improving operating loop for a busy operator.`,
@@ -20,6 +21,9 @@ export function policyPrompt(
           .map((l) => `- (${l.type}) when ${l.trigger} → ${l.lesson}`)
           .join("\n")}`
       : `This is the first run — no lessons yet.`,
+    humanEdit && humanEdit.trim()
+      ? `\nThe operator just gave you direct feedback — APPLY IT NOW in this output, it overrides defaults:\n"${humanEdit.trim()}"`
+      : ``,
     ``,
     `Write the deliverable as tight markdown in EXACTLY this shape:`,
     `**Focus:** <the single most important theme this run, one line>`,

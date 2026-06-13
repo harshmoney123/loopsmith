@@ -127,6 +127,15 @@ const SIGNALS_SCHEMA: JsonSchema = {
  * GTM fixtures. Includes 1-2 deliberate "noise" items so signal selection shows.
  */
 export async function synthesizeSignals(spec: LoopSpec): Promise<Signal[]> {
+  // Prefer REAL connector data when this loop's sensors are connected — a
+  // builder-generated loop then runs on live signals, not synthesized samples.
+  try {
+    const live = await readLiveSignals(spec.sensors);
+    if (live.length) return live;
+  } catch {
+    /* fall through to synthesis */
+  }
+
   const ts = new Date().toISOString();
   try {
     const res = await structured<{ signals: { source: string; actor: string; text: string }[] }>({

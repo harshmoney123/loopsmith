@@ -1,5 +1,22 @@
 import { describe, it, expect } from "vitest";
-import { parsePlan } from "@/engine/policy";
+import { parsePlan, policyPrompt } from "@/engine/policy";
+import { GTM_LOOP } from "@/lib/spec";
+
+describe("policy — humanEdit is applied to the current run (human-in-the-loop)", () => {
+  const signals = [{ source: "gmail", ts: "t", text: "Acme deal $120k" }];
+
+  it("injects operator feedback into the policy prompt when present", () => {
+    const note = "Always lead with the exact dollar amount";
+    const p = policyPrompt(signals, GTM_LOOP, [], note);
+    expect(p.system).toContain(note);
+    expect(p.system.toLowerCase()).toContain("apply it now");
+  });
+
+  it("omits the feedback section when there is none", () => {
+    const p = policyPrompt(signals, GTM_LOOP, []);
+    expect(p.system.toLowerCase()).not.toContain("apply it now");
+  });
+});
 
 /**
  * parsePlan turns the streamed brief into the structured Plan the RunRecord
