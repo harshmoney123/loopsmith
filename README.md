@@ -73,7 +73,7 @@ run       → gate.json carries a numeric score (+ learnings written)
 
 ## "Done" is model-verified, not vibes
 
-- **`npm test`** — 40 tests asserting the acceptance criteria (`tests/`).
+- **`npm test`** — the test suite asserting the acceptance criteria (`tests/`), incl. a real run of the generated repo.
 - **`/api/health`** — responding URL returns `{status, lastRun, lastScore}`.
 - **`/api/workflow`** — every build stage checked against an artifact, not the model's say-so.
 - **Generated repos** ship their own `node --test` suite that passes with zero install.
@@ -99,7 +99,7 @@ connectors · Vitest · JSZip · Vercel (live URL + Cron).
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # 40 tests
+npm test           # the test suite
 npm run build
 ```
 
