@@ -208,8 +208,8 @@ export default function Home() {
       <section className="flex min-w-0 flex-col bg-[var(--bg)]">
         <header className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
           <div className="min-w-0">
-            <h1 className="truncate text-[14px] font-medium">Weekly GTM Execution Loop</h1>
-            <p className="truncate text-[12px] text-[var(--faint)]">Slack · Gmail · Fathom · Calendar → the moves that matter</p>
+            <h1 className="truncate text-[14px] font-medium">Fundraise Pipeline Loop</h1>
+            <p className="truncate text-[12px] text-[var(--faint)]">Investor emails · intros · call notes → the relationships to move on</p>
           </div>
           <span className="text-[var(--faint)]">···</span>
         </header>
@@ -218,8 +218,8 @@ export default function Home() {
           <div className="mx-auto flex max-w-2xl flex-col gap-6">
             {/* task bubble (Codex-style user card) */}
             <div className="self-end rounded-2xl rounded-br-md border border-[var(--border)] bg-[var(--panel-2)] px-4 py-3 text-[13.5px] leading-relaxed text-[var(--fg)] max-w-[85%]">
-              Turn this week&apos;s Slack, customer calls, emails and calendar into the 2–3 moves that
-              actually move revenue — and draft the outreach. Check it before it ships, and learn my
+              Turn my investor emails, intros and call notes into the 2–3 relationships to move on
+              this week — and draft the follow-ups. Check it before it ships, and learn my
               preferences over time.
             </div>
 

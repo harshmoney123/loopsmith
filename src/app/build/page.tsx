@@ -33,9 +33,9 @@ type Msg =
   | { role: "assistant"; text: string; question?: InterviewQuestion };
 
 const EXAMPLES = [
-  "Turn this week's Slack, calls and email into the 2–3 moves that move revenue, and draft the outreach.",
-  "Triage my support inbox every morning — surface the angriest customers and draft replies for me to approve.",
-  "Every Monday, review new signups and flag the ones worth a personal welcome.",
+  "Turn my investor emails, intros and call notes into the few relationships to move on this week, and draft the follow-ups.",
+  "Every Monday, surface the deals in my flow worth a partner meeting and draft the passes.",
+  "Track my raise — flag the investors who've gone quiet and draft the nudge.",
 ];
 
 /* ------------------------------ tiny markdown ------------------------------ */

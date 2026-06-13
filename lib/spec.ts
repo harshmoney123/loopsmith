@@ -1,18 +1,20 @@
 import type { LoopSpec } from "@/lib/types";
 
 /**
- * The default demo loop the builder would generate from a GTM interview.
+ * The default demo loop the builder would generate from a fundraise interview.
  * In the full product this comes out of builder/interview.ts → architect.ts.
+ * Works for both sides of the table: a founder running a raise, or a VC
+ * running deal-flow — same loop over investor emails, intros, and call notes.
  */
 export const GTM_LOOP: LoopSpec = {
-  name: "Weekly GTM Execution Loop",
+  name: "Fundraise Pipeline Loop",
   description:
-    "Turns Slack, customer calls, emails, and calendar into the few moves that matter — and drafts the outreach.",
+    "Turns investor emails, intros, and call notes into the few relationships to move on this week — and drafts the follow-ups.",
   sensors: ["slack", "gmail", "fathom", "calendar"],
   cadence: "weekly:mon:08:00",
   decisionPolicy:
-    "Surface only the 2-3 moves that actually move revenue this week. Lead with the hottest deal. Draft the outreach. Drop pure noise (logistics, FYIs).",
-  outputFormat: "A scannable weekly brief: focus + ranked moves + ready-to-send actions.",
+    "Surface only the 2-3 fundraising relationships that actually move the round forward this week. Lead with the hottest intro. Flag anyone who has gone quiet. Draft the follow-ups. Drop cold/low-intent notes and pure logistics.",
+  outputFormat: "A scannable pipeline brief: focus + ranked moves + ready-to-send follow-ups.",
   rubric: [
     { name: "Clarity", weight: 20, description: "A non-technical reader knows exactly what to do." },
     { name: "Actionability", weight: 20, description: "Every move has a concrete next action and a tool to do it." },

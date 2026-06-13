@@ -2,36 +2,43 @@
   {
     "source": "slack",
     "ts": "2026-06-12T16:04:00Z",
-    "actor": "#sales",
-    "text": "Acme Corp asked for pricing again — third time this week. They want to close before end of quarter.",
-    "meta": { "channel": "sales", "priority_hint": "high" }
+    "actor": "advisor (DM)",
+    "text": "Maya Chen, GP at Lightfield Capital, wants to meet you this week — I told her about your 3x QoQ growth and she's keen. Heads up: they're wrapping a new fund, so she moves fast.",
+    "meta": { "channel": "dm", "priority_hint": "high" }
   },
   {
     "source": "gmail",
-    "ts": "2026-06-12T18:22:00Z",
-    "actor": "ceo@betaco.com",
-    "text": "Following up on the pilot. Our team loved the demo. What does onboarding look like?",
-    "meta": { "thread": "betaco-pilot" }
+    "ts": "2026-06-10T15:40:00Z",
+    "actor": "partner@acmeventures.com",
+    "text": "Acme Ventures — it's been 9 days since the partner meeting. They said they'd 'circle back internally' and have gone quiet since. No reply to my last email.",
+    "meta": { "thread": "acme-partner", "days_since_reply": 9 }
   },
   {
     "source": "fathom",
     "ts": "2026-06-11T21:00:00Z",
-    "actor": "Discovery call — Northwind",
-    "text": "Prospect repeatedly flagged that integration with their CRM is the deciding factor. Budget approved, decision in 2 weeks.",
-    "meta": { "duration_min": 32 }
+    "actor": "Pitch call — Riverside Capital",
+    "text": "Partner liked the wedge and the founder-market fit. Before taking it to the full partnership, he asked for net revenue retention and the cohort retention curves.",
+    "meta": { "duration_min": 28 }
+  },
+  {
+    "source": "gmail",
+    "ts": "2026-06-12T18:22:00Z",
+    "actor": "angel (ex-Stripe exec)",
+    "text": "I'm in for $100k whenever you open the round — just send me the SAFE and I'll sign this week.",
+    "meta": { "thread": "angel-commit" }
+  },
+  {
+    "source": "gmail",
+    "ts": "2026-06-12T11:05:00Z",
+    "actor": "analyst@seedfund.io",
+    "text": "Cold note — saw your launch on X, looks interesting. Could you send over your deck?",
+    "meta": { "thread": "cold-inbound", "priority_hint": "low" }
   },
   {
     "source": "calendar",
-    "ts": "2026-06-16T17:00:00Z",
-    "actor": "Northwind <> Us — Technical deep dive",
-    "text": "Upcoming: technical deep dive with Northwind eng team, Monday 10am.",
-    "meta": { "attendees": 4 }
-  },
-  {
-    "source": "slack",
-    "ts": "2026-06-12T14:10:00Z",
-    "actor": "#general",
-    "text": "Reminder: standup moved to 11. Coffee machine on 2nd floor is fixed.",
-    "meta": { "channel": "general", "priority_hint": "low" }
+    "ts": "2026-06-13T23:00:00Z",
+    "actor": "Investor-update writing block",
+    "text": "Recurring: block to write the monthly investor update, Friday 4pm.",
+    "meta": { "priority_hint": "low" }
   }
 ]
