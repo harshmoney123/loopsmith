@@ -85,9 +85,12 @@ export function parsePlan(output: string): Plan {
       if (!titleMatch) continue;
       const title = titleMatch[1].trim();
       const body = titleMatch[2].trim();
-      const toolMatch = body.match(/\[([a-z0-9_.]+)\]/i);
-      const actionMatch = body.match(/_?Action:?_?\s*([\s\S]+?)(?:`?\[[a-z0-9_.]+\]`?|$)/i);
-      const why = body.split(/_?Action:?_?/i)[0].replace(/[`*]/g, "").trim();
+      const toolMatch = body.match(/\[([a-z0-9_]+\.[a-z0-9_]+)\]/i);
+      // Only split on the explicit Action MARKER ("_Action:_", "**Action:**",
+      // or "Action:") — never the bare word "action" appearing in prose.
+      const actionMark = /(?:_+\*?Action\*?:?_+|\*\*Action:?\*\*|\bAction:)/i;
+      const actionMatch = body.match(new RegExp(actionMark.source + `\\s*([\\s\\S]+?)(?:\`?\\[[a-z0-9_]+\\.[a-z0-9_]+\\]\`?|$)`, "i"));
+      const why = body.split(actionMark)[0].replace(/[`*]/g, "").trim();
       moves.push({
         title,
         why: why || body.replace(/[`*]/g, "").slice(0, 140).trim(),

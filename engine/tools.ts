@@ -12,7 +12,9 @@ import { dispatchAction } from "@/lib/connectors";
 /** Pull the "## Actions" lines ("- [tool] description") out of the brief. */
 export function parseActions(brief: string): { tool: string; desc: string }[] {
   const out: { tool: string; desc: string }[] = [];
-  const re = /-\s*\[([a-z0-9_.]+)\]\s*(.+)/gi;
+  // Tool tokens are dotted (e.g. gmail.draft) — requiring the dot avoids matching
+  // markdown checkboxes like "[x]" or "[ ]" as a tool named "x".
+  const re = /-\s*\[([a-z0-9_]+\.[a-z0-9_]+)\]\s*(.+)/gi;
   // only scan after an "## Actions" heading if present
   const idx = brief.search(/##\s*Actions/i);
   const scope = idx >= 0 ? brief.slice(idx) : brief;

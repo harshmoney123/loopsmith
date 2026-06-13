@@ -64,4 +64,21 @@ describe("sensor — parseRawContext (real value, no OAuth)", () => {
     const sigs = parseRawContext("just a freeform thought about the roadmap this week");
     expect(sigs[0].source).toBe("note");
   });
+
+  it("does NOT mistake leading verbs for source markers (#5 fix)", () => {
+    // A sentence starting with a keyword-like verb must keep its full text and
+    // stay 'note' — not get its first word stripped and mislabeled.
+    const call = parseRawContext("Call Sarah about the renewal before Friday")[0];
+    expect(call.source).toBe("note");
+    expect(call.text.toLowerCase()).toContain("call sarah");
+
+    const email = parseRawContext("Email the whole team the Q3 numbers")[0];
+    expect(email.source).toBe("note");
+    expect(email.text.toLowerCase()).toContain("email the whole team");
+
+    // but genuine labeled forms still classify correctly
+    expect(parseRawContext("Call with BetaCo — they churned")[0].source).toBe("fathom");
+    expect(parseRawContext("Email from jane@acme.com: ready to sign")[0].source).toBe("gmail");
+    expect(parseRawContext("[slack] ship it")[0].source).toBe("slack");
+  });
 });

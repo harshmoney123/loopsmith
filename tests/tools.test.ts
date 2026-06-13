@@ -30,4 +30,15 @@ describe("tools — action extraction + dry-run execution (acceptance #4)", () =
     expect(outcomes.every((o) => o.ok)).toBe(true);
     expect(outcomes[0].result).toMatch(/^dry-run/);
   });
+
+  it("does not treat markdown checkboxes as tools (#16 fix)", () => {
+    const withCheckboxes = [
+      "## Actions",
+      "- [ ] not a tool, just a checkbox",
+      "- [x] done item",
+      "- [gmail.draft] this IS a tool",
+    ].join("\n");
+    const actions = parseActions(withCheckboxes);
+    expect(actions.map((a) => a.tool)).toEqual(["gmail.draft"]);
+  });
 });

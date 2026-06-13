@@ -65,4 +65,19 @@ describe("policy — parsePlan structures the brief (schema gap found by swarm e
     expect(parsePlan("just some text with no structure").focus).toBe("");
     expect(() => parsePlan("## Moves\n1. no bold title here")).not.toThrow();
   });
+
+  it("does not split on the bare word 'action' in prose (#8 fix)", () => {
+    const brief = [
+      "**Focus:** ship it",
+      "## Moves",
+      "1. **Take action on Acme** — this needs action today and is the top action item. _Action:_ Draft the renewal email `[gmail.draft]`",
+    ].join("\n");
+    const plan = parsePlan(brief);
+    expect(plan.moves).toHaveLength(1);
+    const m = plan.moves[0];
+    // the "why" should retain the prose-action words, only the _Action:_ marker splits
+    expect(m.why.toLowerCase()).toContain("needs action today");
+    expect(m.action.toLowerCase()).toContain("draft the renewal email");
+    expect(m.tool).toBe("gmail.draft");
+  });
 });

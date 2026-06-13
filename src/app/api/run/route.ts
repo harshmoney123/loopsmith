@@ -49,6 +49,9 @@ export async function POST(req: Request) {
   // Real-context mode: if the user pasted their actual week, ingest THAT.
   const realSignals = parseRawContext(rawContext);
   const useReal = realSignals.length > 0;
+  // The user explicitly pasted content but nothing parsed out — we must NOT
+  // silently invent synthetic signals (that would break the grounding promise).
+  const pasteButEmpty = rawContext.trim().length > 0 && realSignals.length === 0;
 
   // If the client passed no memory, fall back to durable store memory so a
   // run improves on prior runs even in a fresh session (best-effort on Vercel).
@@ -72,6 +75,14 @@ export async function POST(req: Request) {
       try {
         // 1) SENSOR — real pasted context wins, else synth (custom) / fixtures.
         send({ type: "stage", stage: "sensor", phase: "start" });
+        if (pasteButEmpty) {
+          send({
+            type: "error",
+            message:
+              "Couldn't read any items from that paste. Put one item per line (e.g. \"[slack] Jordan: …\" or \"Email from jane@acme.com: …\") and try again.",
+          });
+          return; // the finally{} closes the controller — do not close here (double-close throws)
+        }
         const signals = useReal
           ? realSignals
           : custom
@@ -95,7 +106,7 @@ export async function POST(req: Request) {
         send({ type: "stage", stage: "gate", phase: "start" });
         const g = gatePrompt(output, spec.rubric, priorLearnings.length);
         const gateText = await streamText({ ...g, onToken: tokens("gate"), maxTokens: 700 });
-        const gate = parseGate(gateText, priorLearnings.length);
+        const gate = parseGate(gateText, spec.rubric, priorLearnings.length);
         send({ type: "stage", stage: "gate", phase: "done", data: { score: gate.score, pass: gate.pass, criteria: gate.criteria } });
 
         // 5) LEARNING (streamed)

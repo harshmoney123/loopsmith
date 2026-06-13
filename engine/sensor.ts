@@ -41,13 +41,19 @@ export async function ingest(sources: string[]): Promise<Signal[]> {
  *   - leading source markers: "[slack] ...", "slack: ...", "Email from X: ...",
  *     "Call with Y — ...", "Calendar: ...", "Notion: ..."
  */
+/**
+ * Source markers must be LABELED — a bracketed tag ("[slack]"), a keyword + a
+ * delimiter ("slack:"), or a recognized lead phrase ("Email from", "Call with").
+ * A bare sentence-initial verb ("Call Sarah about pricing", "Email the team")
+ * must NOT be mistaken for a marker and have its first word stripped (#5).
+ */
 const SOURCE_HINTS: { re: RegExp; source: string }[] = [
-  { re: /^\s*\[?\s*(slack)\s*\]?\s*[:\-–]?\s*/i, source: "slack" },
-  { re: /^\s*\[?\s*(e-?mail|gmail|inbox)\s*\]?\s*[:\-–]?\s*/i, source: "gmail" },
-  { re: /^\s*\[?\s*(call|fathom|meeting|transcript)\s*(with|summary)?\s*\]?\s*[:\-–]?\s*/i, source: "fathom" },
-  { re: /^\s*\[?\s*(calendar|cal|event)\s*\]?\s*[:\-–]?\s*/i, source: "calendar" },
-  { re: /^\s*\[?\s*(notion|doc|note)\s*\]?\s*[:\-–]?\s*/i, source: "notion" },
-  { re: /^\s*\[?\s*(stripe|payment|invoice)\s*\]?\s*[:\-–]?\s*/i, source: "stripe" },
+  { re: /^\s*(?:\[\s*slack\s*\]\s*:?\s*|slack\s*[:\-–]\s+)/i, source: "slack" },
+  { re: /^\s*(?:\[\s*(?:e-?mail|gmail|inbox)\s*\]\s*:?\s*|(?:gmail|inbox)\s*[:\-–]\s+|e-?mail\s+from\s+|e-?mail\s*[:\-–]\s+)/i, source: "gmail" },
+  { re: /^\s*(?:\[\s*(?:call|fathom|meeting|transcript)\s*\]\s*:?\s*|(?:fathom|meeting|transcript)\s*[:\-–]\s+|call\s+with\s+)/i, source: "fathom" },
+  { re: /^\s*(?:\[\s*(?:calendar|cal|event)\s*\]\s*:?\s*|(?:calendar|cal|event)\s*[:\-–]\s+)/i, source: "calendar" },
+  { re: /^\s*(?:\[\s*(?:notion|doc|note)\s*\]\s*:?\s*|(?:notion|doc)\s*[:\-–]\s+)/i, source: "notion" },
+  { re: /^\s*(?:\[\s*(?:stripe|payment|invoice)\s*\]\s*:?\s*|(?:stripe|payment|invoice)\s*[:\-–]\s+)/i, source: "stripe" },
 ];
 
 const MAX_SIGNALS = 40;

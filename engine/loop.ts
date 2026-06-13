@@ -29,7 +29,7 @@ export async function runOnce(
 
   const g = gatePrompt(output, spec.rubric, priorLearnings.length);
   const gateText = await streamText({ ...g, onToken: noop, maxTokens: 700 });
-  const gate = parseGate(gateText, priorLearnings.length);
+  const gate = parseGate(gateText, spec.rubric, priorLearnings.length);
 
   const l = learningPrompt({ spec, output, gateText, score: gate.score });
   const learnText = await streamText({ ...l, onToken: noop, maxTokens: 500 });
