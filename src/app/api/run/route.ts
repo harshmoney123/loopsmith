@@ -6,9 +6,12 @@ import { policyPrompt } from "@/engine/policy";
 import { parseActions, act } from "@/engine/tools";
 import { gatePrompt, parseGate } from "@/engine/gate";
 import { learningPrompt, parseLearnings } from "@/engine/learning";
+import { loadMemory, saveRun, appendMemory, saveSpec } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
+
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "default";
 
 /**
  * Streams one full loop run as NDJSON events so the UI can render the 5 stages
@@ -24,6 +27,7 @@ export async function POST(req: Request) {
   let humanEdit: string | undefined;
   let spec = GTM_LOOP;
   let custom = false;
+  let loopId = "default";
   try {
     const body = await req.json();
     if (Array.isArray(body?.priorLearnings)) priorLearnings = body.priorLearnings;
@@ -33,8 +37,19 @@ export async function POST(req: Request) {
       spec = body.spec;
       custom = true;
     }
+    loopId = typeof body?.loopId === "string" && body.loopId ? slug(body.loopId) : slug(spec.name);
   } catch {
     /* empty body is fine */
+  }
+
+  // If the client passed no memory, fall back to durable store memory so a
+  // run improves on prior runs even in a fresh session (best-effort on Vercel).
+  if (priorLearnings.length === 0) {
+    try {
+      priorLearnings = await loadMemory(loopId);
+    } catch {
+      /* store unavailable — proceed with empty memory */
+    }
   }
 
   const ts = new Date().toISOString();
@@ -88,6 +103,17 @@ export async function POST(req: Request) {
           learnings,
           priorLearningCount: priorLearnings.length,
         };
+
+        // Persist the run + new learnings durably (best-effort: a read-only FS
+        // on serverless must never break the stream the user is watching).
+        try {
+          await saveRun(record, loopId, "manual");
+          await appendMemory(learnings, loopId);
+          if (custom) await saveSpec(spec, loopId);
+        } catch {
+          /* persistence is best-effort */
+        }
+
         send({ type: "done", record });
       } catch (err) {
         send({ type: "error", message: err instanceof Error ? err.message : String(err) });

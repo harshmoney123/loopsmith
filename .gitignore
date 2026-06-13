@@ -43,3 +43,11 @@ next-env.d.ts
 # local screenshots / playwright output
 shot-*.png
 .playwright-mcp/
+
+# loopsmith runtime data (written at runtime by the engine + scheduler)
+/runs/*
+!/runs/.gitkeep
+/memory/*
+!/memory/.gitkeep
+/loops/
+.loopsmith-probe/

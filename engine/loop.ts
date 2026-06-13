@@ -5,6 +5,7 @@ import { policyPrompt } from "./policy";
 import { parseActions, act } from "./tools";
 import { gatePrompt, parseGate } from "./gate";
 import { learningPrompt, parseLearnings } from "./learning";
+import { loadMemory, appendMemory, saveRun } from "@/lib/store";
 
 /**
  * Non-streaming orchestration of all 5 layers for one run:
@@ -44,4 +45,22 @@ export async function runOnce(
     learnings,
     priorLearningCount: priorLearnings.length,
   };
+}
+
+/**
+ * Durable run: loads this loop's accumulated memory from the store, runs once,
+ * then persists the run artifacts + the new learnings. This is what makes
+ * self-improvement real across sessions and lets the scheduler fire with no
+ * human present (PLAN.md acceptance #5, #6). Returns the record + where it saved.
+ */
+export async function runPersisted(
+  spec: LoopSpec,
+  loopId = "default",
+  trigger: "manual" | "scheduler" = "manual",
+): Promise<{ record: RunRecord; savedTo: string }> {
+  const prior = await loadMemory(loopId);
+  const record = await runOnce(spec, prior);
+  const savedTo = await saveRun(record, loopId, trigger);
+  await appendMemory(record.learnings, loopId);
+  return { record, savedTo };
 }
