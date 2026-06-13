@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AppSidebar } from "@/components/loop/AppSidebar";
 
 const inter = Inter({
   variable: "--font-geist-sans",
@@ -28,7 +29,10 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex h-screen overflow-hidden">
+        <AppSidebar />
+        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">{children}</main>
+      </body>
     </html>
   );
 }

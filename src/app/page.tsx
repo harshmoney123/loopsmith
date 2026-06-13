@@ -202,45 +202,8 @@ export default function Home() {
   }, [memory]);
 
   return (
-    <div className="grid h-screen w-full grid-cols-1 md:grid-cols-[232px_1fr] lg:grid-cols-[232px_1fr_312px]">
+    <div className="grid h-full w-full grid-cols-1 lg:grid-cols-[1fr_312px]">
       <Confetti fireKey={confettiKey} />
-      {/* ---------------- sidebar ---------------- */}
-      <aside className="hidden flex-col border-r border-[var(--border)] bg-[var(--bg-tint)] p-3 md:flex">
-        <div className="flex items-center gap-2 px-2 py-2">
-          <span className="orb relative flex h-6 w-6 items-center justify-center rounded-md text-[13px] font-bold text-white" style={{ background: "var(--grad)" }}>
-            L
-            {running && (
-              <>
-                <span className="orb-ring" />
-                <span className="orb-ring" />
-              </>
-            )}
-          </span>
-          <span className="text-[15px] font-semibold tracking-tight">Loopsmith</span>
-        </div>
-
-        <button onClick={run} disabled={running} className="btn btn-outline mt-3 px-3 py-2">
-          <Icon k="spark" className="h-4 w-4 text-[var(--accent)]" />
-          {running ? "Running…" : "New run"}
-        </button>
-
-        <p className="mt-5 px-2 text-[11px] font-medium uppercase tracking-wider text-[var(--faint)]">This session</p>
-        <div className="mt-1 flex flex-col gap-0.5">
-          {history.length === 0 && <p className="px-2 py-1 text-[13px] text-[var(--faint)]">No runs yet</p>}
-          {history.map((h) => (
-            <div key={h.n} className="hoverable flex items-center justify-between px-2 py-1.5 text-[13px]">
-              <span className="text-[var(--muted)]">Run {h.n}</span>
-              <span className="font-mono text-[12px]" style={{ color: h.pass ? "var(--green)" : "var(--red)" }}>{h.score}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-auto flex items-center gap-2 px-2 py-2 text-[12px] text-[var(--faint)]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--green)] pulse-dot" />
-          Opus 4.8 · live
-        </div>
-      </aside>
-
       {/* ---------------- center: feed ---------------- */}
       <section className="flex min-w-0 flex-col bg-[var(--bg)]">
         <header className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
