@@ -52,3 +52,6 @@ shot-*.png
 !/memory/.gitkeep
 /loops/
 .loopsmith-probe/
+
+# codegen materialization test scratch
+/.codegen-test/
