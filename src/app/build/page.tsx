@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState, type ReactElement } from "react";
 import Link from "next/link";
 import type { LoopSpec, Learning, Signal, ToolOutcome } from "@/lib/types";
+import { PRESET_LOOPS } from "@/lib/presets";
 
 /* ----------------------------- interview shapes ----------------------------
  * Mirrored locally (type-only) so this client bundle never imports the server
@@ -222,6 +223,19 @@ export default function BuildPage() {
     [step],
   );
 
+  // One-click prebuilt loop: skip the interview, go straight to a ready spec.
+  const usePreset = useCallback((preset: LoopSpec) => {
+    setDescription(preset.description);
+    setSpec(preset);
+    setCurrentQ(null);
+    setMessages([
+      { role: "user", text: `Use the ready-made "${preset.name}" loop.` },
+      { role: "assistant", text: `Here's the ${preset.name} — ready to run. Tweak it by talking, run it on a sample week, or paste your own data.` },
+    ]);
+    setPhase("spec");
+    setInput("");
+  }, []);
+
   const answer = useCallback(
     (text: string) => {
       const a = text.trim();
@@ -381,7 +395,7 @@ export default function BuildPage() {
       <div ref={feedRef} className="flex-1 overflow-y-auto px-5 py-8">
         <div className="mx-auto flex max-w-2xl flex-col gap-5">
           {phase === "intro" && messages.length === 0 && (
-            <Intro onPick={start} />
+            <Intro onPick={start} onPreset={usePreset} />
           )}
 
           {messages.map((m, i) =>
@@ -487,7 +501,7 @@ export default function BuildPage() {
 
 /* ------------------------------- subcomponents ----------------------------- */
 
-function Intro({ onPick }: { onPick: (s: string) => void }) {
+function Intro({ onPick, onPreset }: { onPick: (s: string) => void; onPreset: (spec: LoopSpec) => void }) {
   return (
     <div className="rise flex flex-col items-center gap-5 py-10 text-center">
       <span className="flex h-12 w-12 items-center justify-center rounded-2xl text-xl font-bold text-white" style={{ background: "var(--grad)" }}>L</span>
@@ -498,16 +512,37 @@ function Intro({ onPick }: { onPick: (s: string) => void }) {
           self-improving operating loop, and runs it — live.
         </p>
       </div>
-      <div className="flex w-full flex-col gap-2">
-        {EXAMPLES.map((ex) => (
-          <button
-            key={ex}
-            onClick={() => onPick(ex)}
-            className="hoverable rounded-xl border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-left text-[13.5px] leading-relaxed text-[var(--muted)]"
-          >
-            {ex}
-          </button>
-        ))}
+
+      {/* one-click prebuilt loops — beat the blank box */}
+      <div className="w-full">
+        <p className="mb-2 text-left text-[11px] font-medium uppercase tracking-wider text-[var(--faint)]">Start from a ready-made loop</p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {PRESET_LOOPS.map((p) => (
+            <button
+              key={p.name}
+              onClick={() => onPreset(p)}
+              className="hoverable rounded-xl border border-[var(--border)] bg-[var(--panel)] p-3 text-left"
+            >
+              <div className="text-[13.5px] font-semibold text-[var(--fg)]">{p.name}</div>
+              <div className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-[var(--muted)]">{p.description}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="w-full">
+        <p className="mb-2 text-left text-[11px] font-medium uppercase tracking-wider text-[var(--faint)]">…or describe your own</p>
+        <div className="flex w-full flex-col gap-2">
+          {EXAMPLES.map((ex) => (
+            <button
+              key={ex}
+              onClick={() => onPick(ex)}
+              className="hoverable rounded-xl border border-[var(--border)] bg-[var(--panel)] px-4 py-3 text-left text-[13.5px] leading-relaxed text-[var(--muted)]"
+            >
+              {ex}
+            </button>
+          ))}
+        </div>
       </div>
       <p className="text-[12px] text-[var(--faint)]">…or type your own below.</p>
     </div>
